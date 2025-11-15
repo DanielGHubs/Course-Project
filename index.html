@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Smart Soil Health Analyzer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Smart soil health tool powered by an AlexNet-based grass health classifier." />
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --bg-alt: #020617;
+      --card: #020617;
+      --accent: #22c55e;
+      --accent-soft: rgba(34, 197, 94, 0.15);
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --border: #1f2937;
+      --danger: #f97373;
+      --shadow: 0 18px 45px rgba(0, 0, 0, 0.5);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, sans-serif;
+      background: radial-gradient(circle at top, #1e293b 0, #020617 55%);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* Navigation */
+    header {
+      position: sticky;
+      top: 0;
+      backdrop-filter: blur(18px);
+      background: rgba(15, 23, 42, 0.8);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+      z-index: 20;
+    }
+
+    .nav {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .nav-logo {
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.3rem;
+      color: var(--muted);
+    }
+
+    .nav-links a:hover {
+      color: var(--accent);
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
+
+    section {
+      margin-top: 4rem;
+    }
+
+    /* Hero Section */
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-top: 2rem;
+      align-items: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.2rem 0.65rem;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--muted);
+      margin-bottom: 0.8rem;
+    }
+
+    .hero-card {
+      background: var(--bg-alt);
+      padding: 1.3rem;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-actions button {
+      margin-right: 0.7rem;
+    }
+
+    .btn {
+      background: var(--accent);
+      color: #052e16;
+      padding: 0.55rem 1.2rem;
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 500;
+      border: none;
+      box-shadow: var(--shadow);
+    }
+
+    .btn.outline {
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--text);
+    }
+
+    /* Section Layout */
+    .section-title {
+      font-size: 1.6rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .section-subtitle {
+      color: var(--muted);
+      max-width: 40rem;
+      margin-bottom: 1rem;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+
+    .card {
+      background: var(--bg-alt);
+      padding: 1.2rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .card h3 {
+      margin-bottom: 0.5rem;
+    }
+
+    /* Hover-to-Text Graph Cards */
+    .hover-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: var(--bg-alt);
+      cursor: pointer;
+      box-shadow: 0 14px 40px rgba(0,0,0,0.45);
+    }
+
+    .hover-card img {
+      width: 90%;
+      height: auto;
+      display: block;
+      margin: 0.75rem auto;
+      transition: opacity .3s ease;
+    }
+
+    .hover-card:hover img {
+      opacity: 0.08;
+    }
+
+    .hover-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80%;
+      text-align: center;
+      color: var(--text);
+      opacity: 0;
+      transition: .3s ease;
+    }
+
+    .hover-card:hover .hover-text {
+      opacity: 1;
+    }
+
+    footer {
+      margin-top: 4rem;
+      padding: 2rem 0;
+      text-align: center;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <nav class="nav">
+      <div class="nav-logo">SoilSense AI</div>
+      <div class="nav-links">
+        <a href="#overview">Overview</a>
+        <a href="#method">AlexNet Model</a>
+        <a href="#pipeline">Training Pipeline</a>
+        <a href="#results">Results</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero" id="top">
+      <div>
+        <div class="badge">Smart Soil Health • CS Project</div>
+        <h1>
+          Monitor <span style="color: var(--accent);">soil health</span> with an AlexNet-powered classifier.
+        </h1>
+        <p>
+          SoilSense AI combines soil readings with automated image analysis of grass to detect early
+          signs of unhealthy soil conditions and provide real-time recommendations.
+        </p>
+
+        <div class="hero-actions">
+          <button class="btn" onclick="scrollToSection('overview')">View Problem Overview</button>
+          <button class="btn outline" onclick="scrollToSection('method')">Explore Technical Solution</button>
+        </div>
+      </div>
+
+      <div class="hero-card">
+        <h3>Live Soil Health Snapshot</h3>
+        <p style="color: var(--muted); font-size: .9rem;">
+          Simulated real-time output from the AlexNet grass classifier.
+        </p>
+
+        <p id="status-label" style="margin-top: 1rem;">Analyzing grass image...</p>
+
+        <div style="margin-top: .8rem;">
+          <strong>Prediction:</strong> <span id="live-pred">Healthy (93%)</span><br>
+          <strong>Soil Status:</strong> <span id="live-soil">Balanced moisture</span><br>
+          <strong>Action:</strong> <span id="live-action">Maintain current watering schedule.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- OVERVIEW -->
+    <section id="overview">
+      <h2 class="section-title">Part 1 — Problem Overview</h2>
+      <p class="section-subtitle">
+        Soil health issues are often invisible until the lawn is already damaged. SoilSense AI aims to
+        detect these early signs through a combination of sensor data and image-based grass analysis.
+      </p>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>The Real Problem</h3>
+          <p>
+            Most people struggle to diagnose soil issues because the warning signs appear first in the
+            grass. Problems like nutrient imbalance, compaction, poor drainage, or dehydration can
+            be detected early by analyzing grass texture, color, and patchiness patterns.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>The SoilSense AI Concept</h3>
+          <p>
+            A tool combining sensors and an AlexNet classifier could provide real-time soil health
+            monitoring. The camera detects unhealthy grass patterns and recommends treatments such
+            as watering adjustments or nutrient corrections.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- METHOD -->
+    <section id="method">
+      <h2 class="section-title">Part 2 — Technical Solution</h2>
+      <p class="section-subtitle">
+        The model uses a simplified AlexNet architecture designed to classify grass health efficiently.
+      </p>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>AlexNet Architecture</h3>
+          <p>
+            The simplified AlexNet model uses layers of convolutions, pooling, and fully 
+            connected units to analyze grass images. Each layer learns different levels of visual 
+            detail, from basic edges to more complex shapes and textures. This structure makes AlexNet 
+            effective at turning raw images into meaningful patterns for classification.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>How the Data Fits</h3>
+          <p>
+            All images are resized to 224×224 and normalized so they match AlexNet’s input requirements.
+             Because the dataset contains only 200 training photos, augmentation techniques such as 
+             flips and color adjustments help increase variety. This makes the model more flexible 
+             and better at handling real-world grass images.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PIPELINE -->
+    <section id="pipeline">
+      <h2 class="section-title">Training & Evaluation Pipeline</h2>
+      <p class="section-subtitle">
+        The training process included experimenting with batch sizes, learning rates, and evaluation
+        metrics to better understand how hyperparameters affect model performance.
+      </p>
+
+      <div class="card">
+        <p>
+            The model was trained for 10 epochs while testing different batch sizes and learning 
+            rates to see how training settings affect performance. Accuracy and validation results
+            were monitored to ensure the model learned consistently. After training, the model was
+            tested on new images to measure how well it detects healthy and unhealthy grass in practice.
+        <p>
+      </div>
+    </section>
+
+    <!-- RESULTS -->
+    <section id="results">
+      <h2 class="section-title">Model Results & Visualizations</h2>
+      <p class="section-subtitle">Hover over each graph to view details.</p>
+
+      <!-- Graph 1 -->
+      <div class="card hover-card" style="margin-top: 2rem;">
+        <img src="img/Graph1.5.png">
+        <div class="hover-text">
+          This graph shows loss decreasing over epochs, indicating the model is learning effectively.
+          Training and validation lines stay close together, suggesting minimal overfitting.
+          A smooth downward trend confirms strong generalization.
+        </div>
+      </div>
+
+      <!-- Graph 2 -->
+      <div class="card hover-card" style="margin-top: 2rem;">
+        <img src="img/Graph1.png">
+        <div class="hover-text">
+          Accuracy improves over time as the model learns grass patterns.
+          Training accuracy rises quickly, while validation accuracy reflects real performance.
+          High final accuracy shows reliable classification ability.
+        </div>
+      </div>
+
+      <!-- Graph 3 -->
+      <div class="card hover-card" style="margin-top: 2rem;">
+        <img src="img/Graph2.png">
+        <div class="hover-text">
+          The confusion matrix shows correct and incorrect predictions for each class.
+          It reveals how well the model distinguishes healthy vs unhealthy grass.
+          Misclassifications help identify areas for improvement.
+        </div>
+      </div>
+
+      <!-- Graph 4 -->
+      <div class="card hover-card" style="margin-top: 2rem;">
+        <img src="img/Graph3.png">
+        <div class="hover-text">
+          Batch size comparisons show performance differences across training sizes.
+          Larger batches can provide more stable updates.
+          The graph helps determine the most effective batch configuration.
+        </div>
+      </div>
+
+      <!-- Graph 5 -->
+      <div class="card hover-card" style="margin-top: 2rem;">
+        <img src="img/Graph4.png">
+        <div class="hover-text">
+          Learning rate affects how quickly the model adapts.
+          A balanced learning rate prevents instability or slow learning.
+          This graph reveals which rate produced the best results.
+        </div>
+      </div>
+
+      <!-- Graph 6 -->
+      <div class="card hover-card" style="margin-top: 2rem;">
+        <img src="img/Graph5.png">
+        <div class="hover-text">
+          The prediction grid shows each test image with confidence scores.
+          It demonstrates real-world model performance outside of training metrics.
+          Correct and incorrect predictions highlight strengths and weaknesses.
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <footer>
+    © <span id="year"></span> Daniel Gutierrez — Grass Health Classification Project
+  </footer>
+
+  <script>
+    function scrollToSection(id) {
+      document.getElementById(id).scrollIntoView({ behavior: "smooth" });
+    }
+
+    // Live data simulation
+    const states = [
+      { status: "Analyzing grass image...", pred: "Healthy (93%)", soil: "Balanced moisture", action: "Maintain watering." },
+      { status: "Dry stress detected", pred: "Unhealthy (81%)", soil: "Low moisture", action: "Increase watering." },
+      { status: "Color stress detected", pred: "Unhealthy (68%)", soil: "Nutrient imbalance", action: "Add nitrogen fertilizer." },
+      { status: "Grass in stable condition", pred: "Healthy (88%)", soil: "Good nutrient range", action: "No action needed." }
+    ];
+
+    let i = 0;
+    setInterval(() => {
+      const s = states[i];
+      document.getElementById("status-label").textContent = s.status;
+      document.getElementById("live-pred").textContent = s.pred;
+      document.getElementById("live-soil").textContent = s.soil;
+      document.getElementById("live-action").textContent = s.action;
+      i = (i + 1) % states.length;
+    }, 3000);
+
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+
+</body>
+</html>
